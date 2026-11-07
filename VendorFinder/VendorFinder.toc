@@ -1,0 +1,17 @@
+## Interface: 16001
+## Title: VendorFinder
+## Notes: Buscá un item y te marca en el mapa el vendedor más cercano que lo vende.
+## Author: Matias
+## Version: 0.1.1
+## OptionalDeps: QuestieDB, Questie, HereBeDragons, TomTom
+## SavedVariables: VendorFinderDB
+## IconTexture: Interface\GossipFrame\VendorGossipIcon
+
+embeds.xml
+
+Core.lua
+Zones.lua
+Data.lua
+Scanner.lua
+Map.lua
+UI.lua

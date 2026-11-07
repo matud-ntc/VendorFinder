@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the tag matches the .toc version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          toc=$(grep -oP '^## Version:\s*\K\S+' VendorFinder/VendorFinder.toc)
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$toc" != "$tag" ]; then
+            echo "VendorFinder.toc says $toc but the tag is $tag" >&2
+            exit 1
+          fi
+
+      - name: Syntax-check Lua
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq lua5.1 >/dev/null
+          for f in VendorFinder/*.lua; do luac5.1 -p "$f" && echo "OK $f"; done
+
+      - name: Build zips
+        run: python3 scripts/build_bundle.py --out dist
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: VendorFinder
+          path: dist/*.zip
+
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+          generate_release_notes: true
+          body: |
+            **Instalación:** descomprimir en `World of Warcraft/_forever_/Interface/AddOns/`.
+
+            - `VendorFinder-x.y.z.zip` — solo el addon. Necesita QuestieDB (bundle de Questie en CurseForge).
+            - `VendorFinder-x.y.z-bundle.zip` — addon + Questie + QuestieDB listos para usar.
+
+            Questie y QuestieDB son de https://github.com/Questie (GPL-3.0).
